@@ -29,9 +29,11 @@ We will start with a very simple counter application. There is a button, and whe
 ```elm
 import Html
 import Html.Events exposing (onClick)
+import StartApp
 
-initialModel =
-  0
+main =
+  StartApp.start
+    { model = 0, view = view, update = update }
 
 update _ model =
   model + 1
@@ -46,13 +48,6 @@ view address model =
           []
           [ Html.text (toString model) ]
       ]
-
-actions =
-  Signal.mailbox ()
-
-main = 
-  Signal.map (view actions.address)
-    (Signal.foldp update initialModel actions.signal)
 ```
 
 After we write that up, we decide it would be nice to have an undo button. The next code block is the same program updated to use the `UndoList` module to add this functionality. It is in one big block because it is mostly the same as the original, and we will go into the differences afterwards.
@@ -60,45 +55,36 @@ After we write that up, we decide it would be nice to have an undo button. The n
 ```elm
 import Html
 import Html.Events exposing (onClick)
-import UndoList
+import StartApp
+import UndoList as UL
 
-initialModel =
-  UndoList.fresh 0
+main =
+  StartApp.start
+    { model = UL.fresh 0, view = UL.view view, update = UL.update update }
 
-update _ state =
-  state + 1
+update _ model =
+  model + 1
 
-view address {present} = 
+view address model = 
   Html.div
       []
       [ Html.button 
-          [ onClick address (UndoList.New ()) ]
+          [ onClick address (UL.New ()) ]
           [ Html.text "Increment" ]
       , Html.button 
-          [ onClick address UndoList.Undo ]
+          [ onClick address UL.Undo ]
           [ Html.text "Undo" ]
       , Html.div 
           []
-          [ Html.text (toString state) ] 
+          [ Html.text (toString model) ] 
       ]
-      
-actions =
-  Signal.mailbox UndoList.Reset
-
-main = 
-  Signal.map (view actions.address)
-    (Signal.foldp (UndoList.apply update) initialModel actions.signal)
 ```
 
-The code looks pretty much the same, but we added a few things.
+The code is almost *exactly* the same!
 
-  1. We import the `UndoList` module.
-  2. Our `initialModel` is now instantiated as a `fresh` `UndoList` which means we set the present value, but the past and future are totally blank.
-  3. The `view` grabs the present value from the `UndoList`
-  4. We added a new button to `view` that reports an `Undo` action.
-  5. We use `UndoList.apply` in the `foldp` to handle any undo/redo stuff
+When we start the app, we simply add a couple wrappers to handle all of the undo/redo functionality. Notice the addition of the functions `UL.fresh`, `UL.view`, and `UL.update` are a totally mechanical augmentation.
 
-To summarize this in a less technical way. We said we want to keep track of history, we added a button that describes how to move through history, and we added one function call that makes this all work together. Three little changes!
+For the actual code, we added another button to our view that reports an `Undo` action and we wrapped up the increment event with `New`. In other words, the bare essentials needed to describe the user facing functionality.
 
 The crazy thing is that this same pattern will work no matter how large your app gets. You do not have to think about any nasty details of undo/redo, you make a tiny number of additions and the vast majority of the code stays exactly the same!
 
@@ -120,10 +106,10 @@ type Action subaction
 
 You can specify all the normal actions of your application with `New` but you now have `Undo`, `Redo`, etc.
 
-This becomes really powerful when paired with `apply` which handles all of the `UndoList` actions seamlessly.
+This becomes really powerful when paired with `update` which handles all of the `UndoList` actions seamlessly.
 
 ```elm
-apply
+update
   : (action -> model -> model)
   -> (Action action -> UndoList model -> UndoList model)
 ```
