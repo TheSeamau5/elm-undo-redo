@@ -18,7 +18,8 @@ import List
 import Maybe
 
 main =
-  check suite_package 10000 (Random.initialSeed 872620)
+  --check suite_package 10000 (Random.initialSeed 872620)
+  quickCheck suite_package
   |> display
 
 
