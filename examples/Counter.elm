@@ -1,7 +1,7 @@
 import Html
 import Html.Events exposing (onClick)
 import Signal exposing (mailbox)
-import UndoList exposing (UndoList(..), Action(..), fresh, apply)
+import UndoList exposing (UndoList, Action(..), fresh, apply)
 
 -------------------------------
 -- Version with undo support --
@@ -11,7 +11,7 @@ initial = fresh 0
 
 update _ state = state + 1
 
-view address (UndoList _ state _ ) =
+view address {present} =
   Html.div
       []
       [ Html.button
@@ -22,7 +22,7 @@ view address (UndoList _ state _ ) =
             [ Html.text "Undo" ]
       , Html.div
             []
-            [ Html.text (toString state) ]
+            [ Html.text (toString present) ]
       ]
 
 {address, signal} = mailbox Reset

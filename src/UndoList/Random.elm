@@ -8,7 +8,7 @@ Provides random undolist and undolist action generators.
 -}
 
 
-import UndoList     exposing (UndoList(..), Action(..))
+import UndoList     exposing (UndoList, Action(..))
 import Random       exposing (Generator, list)
 import Random.Extra exposing (map, map3, frequency, constant)
 

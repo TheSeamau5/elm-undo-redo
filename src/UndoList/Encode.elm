@@ -8,7 +8,7 @@ Provides JSON encoders for Timelines and UndoList Actions.
 
 -}
 
-import UndoList     exposing (UndoList(..), Action(..))
+import UndoList     exposing (UndoList, Action(..))
 import Json.Encode  exposing (Value, object, list, string)
 
 {-| Encode an undolist of JSON values.
@@ -18,7 +18,7 @@ Best paired with the `map` function from UndoList.
       UndoList.map stateEncoder >> undolist
 -}
 undolist : UndoList Value -> Value
-undolist (UndoList past present future) =
+undolist {past, present, future} =
   object
     [ ("past"   , list past   )
     , ("present", present     )
