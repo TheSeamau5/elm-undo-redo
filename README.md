@@ -1,10 +1,10 @@
-# Easy undo in Elm with elm-undo-redo
+# Undo in any Elm app
+     
+> add undo/redo to any Elm application
 
-This package makes dealing with undo extremely easy in Elm. By enforcing immutability, Elm applications
-have the benefit that, at any given time, the entire state of the application is known. Therefore, theoretically 
-undo is trivial as one merely needs to capture the past states and then move back one state in the past. This is 
-exactly what this library does. Furthermore, by embracing functional programming an a clear and simple functional 
-reactive model, it is possible to provide abstractions to support undo/redo in absolutely any Elm application.
+Trying to add undo/redo in JS can be a nightmare. If anything gets mutated in an unexpected way, your history can get corrupted. Elm is built from the ground up around efficient, immutable data structures. That means adding support for undo/redo is a matter of remembering the state of your app at certain times. Since there is no mutation, there is no risk of things getting corrupted. Since immutability lets you do structural sharing within data structures, it also means these snapshots can be quite compact.
+
+So this package takes these underlying strengths of Elm and turns them into a small package that lets you drop in undo/redo functionality in just a few lines of code!
 
 
 ### How it works
