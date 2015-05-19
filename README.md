@@ -119,7 +119,7 @@ main =
 
 Now, suppose that we wish to add a button that performs undo. To support this feature we need to :
 
-**1) Convert the model from `Int` to `UndoList Int`**
+**1) Convert the initial model from `Int` to `UndoList Int`**
 
 ```elm
 initial : UndoList Int 
