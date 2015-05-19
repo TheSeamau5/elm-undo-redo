@@ -29,7 +29,7 @@ view address state =
 
 main =
   Signal.map (UndoList.view view address)
-    (Signal.foldp (UndoList.apply update) (UndoList.fresh initial) signal)
+    (Signal.foldp (UndoList.update update) (UndoList.fresh initial) signal)
 
 
 

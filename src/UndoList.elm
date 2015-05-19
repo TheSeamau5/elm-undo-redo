@@ -14,7 +14,7 @@ module UndoList where
 @docs Action, mapAction
 
 # Functional Operations
-@docs map, mapPresent, apply, connect, reduce, foldl, foldr, reverse, flatten, flatMap, andThen, map2, andMap
+@docs map, mapPresent, update, connect, reduce, foldl, foldr, reverse, flatten, flatMap, andThen, map2, andMap
 
 # Shorthands
 @docs foldp, mailbox
@@ -174,8 +174,8 @@ lengthFuture =
 --------------------------
 
 {-| Simple UndoList Action type. This is a simple type that can be used for
-most use cases. This works best when paired with the `apply` function as
-`apply` will perform the corresponding operations on the undolist automatically.
+most use cases. This works best when paired with the `update` function as
+`update` will perform the corresponding operations on the undolist automatically.
 
 Consider using your own data type only if you really need it.
 -}
@@ -256,11 +256,11 @@ Example:
         ... -- some implementation
 
     -- Your new update function
-    update' = apply update
+    update' = UndoList.update update
 
 -}
-apply : (action -> state -> state) -> Action action -> UndoList state -> UndoList state
-apply update action undolist =
+update : (action -> state -> state) -> Action action -> UndoList state -> UndoList state
+update updater action undolist =
   case action of
     Reset ->
       reset undolist
@@ -274,7 +274,7 @@ apply update action undolist =
       forget undolist
 
     New action ->
-      new (update action undolist.present) undolist
+      new (updater action undolist.present) undolist
 
 {-| Alias for `foldl`
 -}
@@ -353,7 +353,7 @@ Then, you could construct the main function as follows:
 
     main =
       Signal.map (UndoList.view view address)
-        (Signal.foldp (UndoList.apply update) (UndoList.fresh initial) signal)
+        (Signal.foldp (UndoList.update update) (UndoList.fresh initial) signal)
 
 -}
 view : (Address (Action action) -> state -> view) -> (Address (Action action) -> UndoList state -> view)
@@ -366,14 +366,14 @@ view viewer address {present} =
 This shorthand is defined simple as follows:
 
     foldp update initial =
-      Signal.foldp (apply update) (fresh initial)
+      Signal.foldp (update update) (fresh initial)
 
 This allows you to foldp on undo-lists without having to explicitly sprinkle
 in undolist-specific code.
 -}
 foldp : (action -> state -> state) -> state -> Signal (Action action) -> Signal (UndoList state)
-foldp update initial =
-  Signal.foldp (apply update) (fresh initial)
+foldp updater initial =
+  Signal.foldp (update updater) (fresh initial)
 
 
 {-| Shorthand for
