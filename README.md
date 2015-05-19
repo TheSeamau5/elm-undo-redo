@@ -211,6 +211,11 @@ You're done. Seriously. You've just added undo to this counter without manually 
 Here's the whole code to convince yourself of this:
 
 ```elm
+import Html
+import Html.Events exposing (onClick)
+import Signal exposing (mailbox)
+import UndoList exposing (UndoList(..), Action(..), fresh, apply)
+
 initial = fresh 0
 
 update _ state = state + 1
