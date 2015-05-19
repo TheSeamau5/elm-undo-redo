@@ -8,11 +8,6 @@
         "../src"
     ],
     "exposed-modules": [
-        "UndoList",
-        "UndoList.Decode",
-        "UndoList.Encode",
-        "UndoList.Random",
-        "UndoList.Shrink"
     ],
     "dependencies": {
         "TheSeamau5/elm-check": "3.0.1 <= v < 4.0.0",
