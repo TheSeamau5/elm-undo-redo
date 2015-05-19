@@ -119,7 +119,16 @@ main =
 
 Now, suppose that we wish to add a button that performs undo. To support this feature we need to :
 
-**1) Convert the initial model from `Int` to `UndoList Int`**
+**1) Import UndoList**
+
+```elm
+import Html
+import Html.Events exposing (onClick)
+import Signal exposing (mailbox)
+import UndoList exposing (UndoList(..), Action(..), fresh, apply)
+```
+
+**2) Convert the initial model from `Int` to `UndoList Int`**
 
 ```elm
 initial : UndoList Int 
@@ -129,7 +138,7 @@ initial = fresh 0
 -- fresh creates an undo list with neither past nor future states
 ```
 
-**2) Send undo list actions as opposed to simply `()` and add the undo button**
+**3) Send undo list actions as opposed to simply `()` and add the undo button**
 
 ```elm
 -- make sure you extract the present state somehow
@@ -165,7 +174,7 @@ If we simply wrap all actions send to the address with `New`, your application w
 just accumulate the past states without influencing the correctness of your code. 
 
 
-**3) Modify the mailbox to support undo list actions**
+**4) Modify the mailbox to support undo list actions**
 
 ```elm
 {address, signal} = mailbox Reset
@@ -177,7 +186,7 @@ just accumulate the past states without influencing the correctness of your code
 Reset is harmless choice for an initial `Action` because it is a no-op on a fresh undo list.
 
 
-**4) Apply the `update` function**
+**5) Apply the `update` function**
 
 ```elm
 main : Signal Html
@@ -194,7 +203,7 @@ apply :  (action -> state -> state)
       -> (Action action -> UndoList state -> UndoList state)
 ```
 
-**5) That's it!**
+**6) That's it!**
 
 You're done. Seriously. You've just added undo to this counter without manually dealing with the undo logic. 
 
