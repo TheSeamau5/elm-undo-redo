@@ -1,5 +1,5 @@
 # Undo in any Elm app
-     
+
 > add undo/redo to any Elm application
 
 Trying to add undo/redo in JS can be a nightmare. If anything gets mutated in an unexpected way, your history can get corrupted. Elm is built from the ground up around efficient, immutable data structures. That means adding support for undo/redo is a matter of remembering the state of your app at certain times. Since there is no mutation, there is no risk of things getting corrupted. Since immutability lets you do structural sharing within data structures, it also means these snapshots can be quite compact.
@@ -12,15 +12,15 @@ So this package takes these underlying strengths of Elm and turns them into a sm
 The library is centered around a single data structure, the `UndoList`.
 
 ```elm
-type UndoList state = UndoList (List state) state (List state)
+type alias UndoList state =
+  { past    : List state
+  , present : state
+  , future  : List state
+  }
 ```
 
-An `UndoList` contains a list of past state, a present state, and a list of future states where the head of 
+An `UndoList` contains a list of past state, a present state, and a list of future states where the head of
 the past list is the previous state and the head of the future list is the next state.
-
-```elm
-UndoList past present future
-```
 
 So, say you have a function to view a given state
 
@@ -45,23 +45,23 @@ view (present (undo states))
 -- undo : UndoList state -> UndoList state
 ```
 
-Furthermore, given the simplicity of the `UndoList` data structure, the `undo` function has a trivial 
+Furthermore, given the simplicity of the `UndoList` data structure, the `undo` function has a trivial
 implementation.
 
 ```elm
 undo : UndoList state -> UndoList state
-undo (UndoList past present future) = 
-  case past of 
-    [] -> 
+undo {past, present, future} =
+  case past of
+    [] ->
       UndoList past present future
     previous :: pastStates ->
       UndoList pastStates previous (present :: future)
 ```
 
-All you need to do is set the previous state as the present state and add the old present state to the list of 
+All you need to do is set the previous state as the present state and add the old present state to the list of
 future states.
 
-Redo is defined just as trivially. 
+Redo is defined just as trivially.
 
 ### How do you use it
 
@@ -76,42 +76,42 @@ initial = 0
 
 update _ state = state + 1
 
-view address state = 
-  Html.div 
+view address state =
+  Html.div
       []
-      [ Html.button 
+      [ Html.button
             [ onClick address () ]
             [ Html.text "Increment" ]
-      , Html.div 
+      , Html.div
             []
             [ Html.text (toString state) ]
       ]
 
 {address, signal} = mailbox ()
 
-main = 
+main =
   Signal.map (view address)
     (Signal.foldp update initial signal)
 ```
 
-Where you have a button that, when clicked, increments a counter. 
+Where you have a button that, when clicked, increments a counter.
 
 If we consider the [Elm Architecture](https://github.com/evancz/elm-architecture-tutorial), then this application
 adheres to it with the following form:
 
 ```elm
-initial : Int 
+initial : Int
 
-update : () -> Int -> Int 
+update : () -> Int -> Int
 
-view : Address () -> Int -> Html 
+view : Address () -> Int -> Html
 
 address : Address ()
 
 signal : Signal ()
 
 main : Signal Html
-main = 
+main =
   Signal.map (view address)
     (Signal.foldp update initial signal)
 ```
@@ -125,13 +125,13 @@ Now, suppose that we wish to add a button that performs undo. To support this fe
 import Html
 import Html.Events exposing (onClick)
 import Signal exposing (mailbox)
-import UndoList exposing (UndoList(..), Action(..), fresh, apply)
+import UndoList exposing (UndoList, Action(..), fresh, apply)
 ```
 
 **2) Convert the initial model from `Int` to `UndoList Int`**
 
 ```elm
-initial : UndoList Int 
+initial : UndoList Int
 initial = fresh 0
 
 -- fresh : a -> UndoList a
@@ -141,37 +141,36 @@ initial = fresh 0
 **3) Send undo list actions as opposed to simply `()` and add the undo button**
 
 ```elm
--- make sure you extract the present state somehow
--- as you are passed the entire undo list
+-- make sure you extract the present state
 view : Address (Action ()) -> UndoList Int -> Html
-view address (UndoList _ state _ ) = 
-  Html.div 
+view address {present} =
+  Html.div
       []
-      [ Html.button 
+      [ Html.button
             [ onClick address (New ()) ]
             [ Html.text "Increment" ]
-      , Html.button 
+      , Html.button
             [ onClick address Undo ]
             [ Html.text "Undo" ]
-      , Html.div 
+      , Html.div
             []
-            [ Html.text (toString state) ] 
+            [ Html.text (toString present) ]
       ]
 ```
 
 `elm-redo-undo` provides a default `Action` type to wrap all your actions. It is defined as follows:
 
 ```elm
-type Action a 
-  = Reset       -- reset the state to the oldest state, removing all other states 
+type Action a
+  = Reset       -- reset the state to the oldest state, removing all other states
   | Undo        -- go back to the previous state (this is a no-op if there is no such state)
   | Redo        -- go to the next state (this is a no-op if there is no such state)
   | Forget      -- remove all past states
   | New a       -- add a new value or action. This removes all future states
 ```
 
-If we simply wrap all actions send to the address with `New`, your application will be unchanged and will 
-just accumulate the past states without influencing the correctness of your code. 
+If we simply wrap all actions send to the address with `New`, your application will be unchanged and will
+just accumulate the past states without influencing the correctness of your code.
 
 
 **4) Modify the mailbox to support undo list actions**
@@ -190,22 +189,22 @@ Reset is harmless choice for an initial `Action` because it is a no-op on a fres
 
 ```elm
 main : Signal Html
-main = 
+main =
   Signal.map (view address)
     (Signal.foldp (apply update) initial signal)
 ```
 
-`apply` converts a function that updates a `state` given some `action` into a function that updates an 
+`apply` converts a function that updates a `state` given some `action` into a function that updates an
 `UndoList state` given some `Action action`.
 
 ```elm
-apply :  (action -> state -> state) 
+apply :  (action -> state -> state)
       -> (Action action -> UndoList state -> UndoList state)
 ```
 
 **6) That's it!**
 
-You're done. Seriously. You've just added undo to this counter without manually dealing with the undo logic. 
+You're done. Seriously. You've just added undo to this counter without manually dealing with the undo logic.
 
 
 Here's the whole code to convince yourself of this:
@@ -214,32 +213,32 @@ Here's the whole code to convince yourself of this:
 import Html
 import Html.Events exposing (onClick)
 import Signal exposing (mailbox)
-import UndoList exposing (UndoList(..), Action(..), fresh, apply)
+import UndoList exposing (UndoList, Action(..), fresh, apply)
 
 initial = fresh 0
 
 update _ state = state + 1
 
-view address (UndoList _ state _ ) = 
-  Html.div 
+view address {present} =
+  Html.div
       []
-      [ Html.button 
+      [ Html.button
             [ onClick address (New ()) ]
             [ Html.text "Increment" ]
-      , Html.button 
+      , Html.button
             [ onClick address Undo ]
             [ Html.text "Undo" ]
-      , Html.div 
+      , Html.div
             []
-            [ Html.text (toString state) ] 
+            [ Html.text (toString present) ]
       ]
-      
+
 {address, signal} = mailbox Reset
 
-main = 
+main =
   Signal.map (view address)
     (Signal.foldp (apply update) initial signal)
 ```
 
-The best thing about this appraoch is that it is very general. The `update` function did not have to change
-at all, and the `view` function only required minimal changes. 
+The best thing about this approach is that it is very general. The `update` function did not have to change
+at all, and the `view` function only required minimal changes.

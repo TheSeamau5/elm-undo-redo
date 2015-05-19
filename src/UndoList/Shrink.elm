@@ -9,14 +9,14 @@ Provides shrinking strategies for timelines and actions.
 -}
 
 import Shrink   exposing (Shrinker, map, list)
-import UndoList exposing (UndoList(..), Action(..))
+import UndoList exposing (UndoList, Action(..))
 import List
 
 
 {-| Shrink an undo-list of states given a shrinker of states.
 -}
 undolist : Shrinker state -> Shrinker (UndoList state)
-undolist shrinker (UndoList past present future) =
+undolist shrinker {past, present, future} =
   let
       --pasts : List (List state)
       pasts = list shrinker past
