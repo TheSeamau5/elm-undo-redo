@@ -190,7 +190,8 @@ main =
 `UndoList state` given some `Action action`.
 
 ```elm
-apply : (action -> state -> state) -> (Action action -> UndoList state -> UndoList state)
+apply :  (action -> state -> state) 
+      -> (Action action -> UndoList state -> UndoList state)
 ```
 
 **5) That's it!**
