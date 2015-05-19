@@ -5,7 +5,7 @@ import Check.Runner.Browser exposing (..)
 import Test.Investigator.UndoList exposing (..)
 import Test.Investigator.Action exposing (..)
 
-import UndoList exposing (UndoList(..), Action(..))
+import UndoList exposing (UndoList, Action(..))
 import UndoList.Decode as Decode
 import UndoList.Encode as Encode
 import UndoList.Shrink
@@ -152,14 +152,10 @@ claim_reset_equivalent_fresh_oldest =
 
 
 fresh_oldest undolist =
-  let
-      present = UndoList.present undolist
-  in
-    undolist
-    |> UndoList.past
+  undolist.past
     |> List.reverse
     |> List.head
-    |> Maybe.withDefault present
+    |> Maybe.withDefault undolist.present
     |> UndoList.fresh
 
 
@@ -167,9 +163,9 @@ claim_new_then_undo_yields_same_present =
   claim
     "Calling new then undo preserves the original present state"
   `that`
-    (\(v, undolist) -> UndoList.new v undolist |> UndoList.undo |> UndoList.present)
+    (\(v, undolist) -> UndoList.new v undolist |> UndoList.undo |> .present)
   `is`
-    (\(_, undolist) -> UndoList.present undolist)
+    (\(_, undolist) -> undolist.present)
   `for`
     tuple (int, undolist int)
 

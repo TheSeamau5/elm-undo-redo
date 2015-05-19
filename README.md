@@ -1,6 +1,6 @@
 # Undo in any Elm app
-     
-> add undo/redo to any Elm application
+
+Add undo/redo to any Elm application!
 
 Trying to add undo/redo in JS can be a nightmare. If anything gets mutated in an unexpected way, your history can get corrupted. Elm is built from the ground up around efficient, immutable data structures. That means adding support for undo/redo is a matter of remembering the state of your app at certain times. Since there is no mutation, there is no risk of things getting corrupted. Since immutability lets you do structural sharing within data structures, it also means these snapshots can be quite compact.
 
@@ -12,9 +12,12 @@ So this package takes these underlying strengths of Elm and turns them into a sm
 The library is centered around a single data structure, the `UndoList`.
 
 ```elm
-type UndoList state =
-    UndoList (List state) state (List state)
-```
+type alias UndoList state =
+  { past    : List state
+  , present : state
+  , future  : List state
+  }
+``````
 
 An `UndoList` contains a list of past state, a present state, and a list of future states. Since it keeps track of the past, present, and future, undo and redo are just a matter of sliding the present around a bit.
 
@@ -26,8 +29,6 @@ We will start with a very simple counter application. There is a button, and whe
 ```elm
 import Html
 import Html.Events exposing (onClick)
-import Signal
-
 
 initialModel =
   0
@@ -59,7 +60,6 @@ After we write that up, we decide it would be nice to have an undo button. The n
 ```elm
 import Html
 import Html.Events exposing (onClick)
-import Signal
 import UndoList
 
 initialModel =
@@ -68,8 +68,8 @@ initialModel =
 update _ state =
   state + 1
 
-view address (UndoList _ state _ ) = 
-  Html.div 
+view address {present} = 
+  Html.div
       []
       [ Html.button 
           [ onClick address (UndoList.New ()) ]

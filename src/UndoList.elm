@@ -8,7 +8,7 @@ module UndoList where
 @docs undo, redo, fresh, new, forget, reset
 
 # Query UndoList
-@docs past, present, future, hasPast, hasFuture, length, lengthPast, lengthFuture
+@docs hasPast, hasFuture, length, lengthPast, lengthFuture
 
 # Actions
 @docs Action, mapAction
@@ -38,14 +38,16 @@ An UndoList has:
 2. A present state
 3. A list of future states
 
-    UndoList past present future
 
 The head of the past list is the most recent state and the head of the future
 list is the next state. (i.e., the tails of both lists point away from the
 present)
 -}
-type UndoList state
-  = UndoList (List state) state (List state)
+type alias UndoList state =
+  { past    : List state
+  , present : state
+  , future  : List state
+  }
 
 
 -------------------------------
@@ -61,7 +63,7 @@ i.e.
     undo (UndoList [3,2,1] 4 [5,6]) == UndoList [2,1] 3 [4,5,6]
 -}
 undo : UndoList state -> UndoList state
-undo (UndoList past present future) =
+undo {past, present, future} =
   case past of
     [] ->
       UndoList past present future
@@ -79,7 +81,7 @@ i.e.
     redo (UndoList [3,2,1] 4 [5,6]) == UndoList [4,3,2,1] 5 [6]
 -}
 redo : UndoList state -> UndoList state
-redo (UndoList past present future) =
+redo {past, present, future} =
   case future of
     [] ->
       UndoList past present future
@@ -98,7 +100,7 @@ fresh state =
 present state into a past state and erasing the future.
 -}
 new : state -> UndoList state -> UndoList state
-new event (UndoList past present _ ) =
+new event {past, present} =
   UndoList (present :: past) event []
 
 
@@ -109,7 +111,7 @@ i.e.
     forget (UndoList [3,2,1] 4 [5,6]) == UndoList [] 4 [5,6]
 -}
 forget : UndoList state -> UndoList state
-forget (UndoList _ present future) =
+forget {present, future} =
   UndoList [] present future
 
 
@@ -121,7 +123,7 @@ i.e.
     reset (UndoList [3,2,1] 4 [5,6]) == UndoList [] 1 []
 -}
 reset : UndoList state -> UndoList state
-reset (UndoList past present _ ) =
+reset {past, present} =
   case past of
     [] ->
       fresh present
@@ -136,34 +138,17 @@ reset (UndoList past present _ ) =
 -- UndoList Queries --
 ----------------------
 
-{-| Get the present state of the undo-list.
--}
-present : UndoList state -> state
-present (UndoList _ present' _) = present'
-
-{-| Get all the past states of the undo-list.
-Remember: the head of the list is the most recent state.
--}
-past : UndoList state -> List state
-past (UndoList past' _ _) = past'
-
-{-| Get all the future state of the undo-list.
--}
-future : UndoList state -> List state
-future (UndoList _ _ future') = future'
-
-
 {-| Check if the undo-list has any past states.
 -}
 hasPast : UndoList state -> Bool
 hasPast =
-  past >> List.isEmpty
+  .past >> List.isEmpty
 
 {-| Check if the undo-list has any future states.
 -}
 hasFuture : UndoList state -> Bool
 hasFuture =
-  future >> List.isEmpty
+  .future >> List.isEmpty
 
 
 {-| Get the full length of an undo-list
@@ -176,13 +161,13 @@ length undolist =
 -}
 lengthPast : UndoList state -> Int
 lengthPast =
-  past >> List.length
+  .past >> List.length
 
 {-| Get the length of the future
 -}
 lengthFuture : UndoList state -> Int
 lengthFuture =
-  future >> List.length
+  .future >> List.length
 
 --------------------------
 -- UndoList Action Type --
@@ -235,13 +220,16 @@ Example:
       |> Encode.undolist
 -}
 map : (a -> b) -> UndoList a -> UndoList b
-map f (UndoList past present future) =
+map f {past, present, future} =
   UndoList (List.map f past) (f present) (List.map f future)
 
 
 map2 : (a -> b -> c) -> UndoList a -> UndoList b -> UndoList c
-map2 f (UndoList pastA presentA futureA) (UndoList pastB presentB futureB) =
-  UndoList (List.map2 f pastA pastB) (f presentA presentB) (List.map2 f futureA futureB)
+map2 f undoListA undoListB =
+  UndoList
+    (List.map2 f undoListA.past undoListB.past)
+    (f undoListA.present undoListB.present)
+    (List.map2 f undoListA.future undoListB.future)
 
 
 andMap : UndoList (a -> b) -> UndoList a -> UndoList b
@@ -251,7 +239,7 @@ andMap =
 {-| Apply a function only on the present.
 -}
 mapPresent : (a -> a) -> UndoList a -> UndoList a
-mapPresent f (UndoList past present future) =
+mapPresent f {past, present, future} =
   UndoList past (f present) future
 
 
@@ -286,7 +274,7 @@ apply update action undolist =
       forget undolist
 
     New action ->
-      new (update action (present undolist)) undolist
+      new (update action undolist.present) undolist
 
 {-| Alias for `foldl`
 -}
@@ -296,7 +284,7 @@ reduce = foldl
 {-| Reduce an undo-list from the left (or from the past)
 -}
 foldl : (a -> b -> b) -> b -> UndoList a -> b
-foldl reducer initial (UndoList past present future) =
+foldl reducer initial {past, present, future} =
   List.foldr reducer initial past
   |> reducer present
   |> (\b -> List.foldl reducer b future)
@@ -305,7 +293,7 @@ foldl reducer initial (UndoList past present future) =
 {-| Reduce an undo-list from the right (or from the future)
 -}
 foldr : (a -> b -> b) -> b -> UndoList a -> b
-foldr reducer initial (UndoList past present future) =
+foldr reducer initial {past, present, future} =
   List.foldr reducer initial future
   |> reducer present
   |> (\b -> List.foldl reducer b past)
@@ -314,18 +302,18 @@ foldr reducer initial (UndoList past present future) =
 {-| Reverse an undo-list.
 -}
 reverse : UndoList a -> UndoList a
-reverse (UndoList past present future) =
+reverse {past, present, future} =
   UndoList future present past
 
 
 {-| Flatten an undo-list.
 -}
 flatten : UndoList (UndoList a) -> UndoList a
-flatten (UndoList pastTimelines (UndoList past present future) futureTimelines) =
+flatten {past, present, future} =
   UndoList
-    (past ++ List.reverse (List.concatMap toList pastTimelines))
-    (present)
-    (future ++ List.concatMap toList futureTimelines)
+    (present.past ++ List.reverse (List.concatMap toList past))
+    (present.present)
+    (present.future ++ List.concatMap toList future)
 
 
 flatMap : (a -> UndoList b) -> UndoList a -> UndoList b
@@ -342,7 +330,7 @@ andThen =
 considered the present of the output undolist.
 -}
 connect : UndoList state -> UndoList state -> UndoList state
-connect (UndoList past present future) undolist =
+connect {past, present, future} undolist =
   UndoList past present (future ++ toList undolist)
 
 
@@ -392,7 +380,7 @@ mailbox action =
     toList (UndoList [3,2,1] 4 [5,6]) == [1,2,3,4,5,6]
 -}
 toList : UndoList state -> List state
-toList (UndoList past present future) =
+toList {past, present, future} =
   List.reverse past ++ [present] ++ future
 
 {-| Convert a list to undolist. The provided state is used as the present

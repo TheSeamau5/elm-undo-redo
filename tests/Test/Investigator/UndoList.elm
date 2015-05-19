@@ -2,7 +2,7 @@ module Test.Investigator.UndoList where
 
 
 import Check.Investigator exposing (Investigator, investigator)
-import UndoList exposing (UndoList(..), Action(..))
+import UndoList exposing (UndoList, Action(..))
 import UndoList.Random as Random
 import UndoList.Shrink as Shrink
 import Random
