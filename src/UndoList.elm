@@ -24,7 +24,7 @@ module UndoList where
 -}
 
 import List
-import Signal exposing (Signal, Mailbox)
+import Signal exposing (Signal, Address, Mailbox)
 
 
 -------------------
@@ -337,6 +337,29 @@ connect {past, present, future} undolist =
 ----------------
 -- Shorthands --
 ----------------
+
+{-| Function to help not having to deal with the full undolist from with
+your actual view function.
+
+Suppose you define the following:
+
+    initial : model
+    update : action -> model -> model
+    view : Address (UndoList.Action action) -> model -> view
+    address : Address (UndoList.Action action)
+    signal : Signal (UndoList.Action action)
+
+Then, you could construct the main function as follows:
+
+    main =
+      Signal.map (UndoList.view view address)
+        (Signal.foldp (UndoList.apply update) (UndoList.fresh initial) signal)
+
+-}
+view : (Address (Action action) -> state -> view) -> (Address (Action action) -> UndoList state -> view)
+view viewer address {present} =
+  viewer address present
+
 
 {-| Analog of Signal.foldp
 
