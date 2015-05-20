@@ -1,10 +1,8 @@
 # Undo in any Elm app
 
-Add undo/redo to any Elm application!
+Add undo/redo to any Elm app with just a few lines of code!
 
-Trying to add undo/redo in JS can be a nightmare. If anything gets mutated in an unexpected way, your history can get corrupted. Elm is built from the ground up around efficient, immutable data structures. That means adding support for undo/redo is a matter of remembering the state of your app at certain times. Since there is no mutation, there is no risk of things getting corrupted. Given immutability lets you do structural sharing within data structures, it also means these snapshots can be quite compact.
-
-This package takes these underlying strengths of Elm and turns them into a small package that lets you drop in undo/redo functionality with just a few lines of code!
+Trying to add undo/redo in JS can be a nightmare. If anything gets mutated in an unexpected way, your history can get corrupted. Elm is built from the ground up around efficient, immutable data structures. That means adding support for undo/redo is a matter of remembering the state of your app at certain times. Since there is no mutation, there is no risk of things getting corrupted. Given immutability lets you do structural sharing within data structures, it also means these snapshots can be quite compact!
 
 
 ## How it works
