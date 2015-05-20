@@ -27,6 +27,7 @@ An `UndoList` contains a list of past states, a present state, and a list of fut
 We will start with a very simple counter application. There is a button, and when it is clicked, a counter is incremented.
 
 ```elm
+-- BEFORE
 import Html
 import Html.Events exposing (onClick)
 import StartApp
@@ -55,6 +56,7 @@ Suppose that further down the line we decide it would be nice to have an undo bu
 The next code block is the same program updated to use the `UndoList` module to add this functionality. It is in one big block because it is mostly the same as the original, and we will go into the differences afterwards.
 
 ```elm
+-- AFTER
 import Html
 import Html.Events exposing (onClick)
 import StartApp
