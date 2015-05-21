@@ -87,13 +87,24 @@ view address state =
 initial : String
 initial = ""
 
+------------------
+-- Update State --
+------------------
+
 -- Update current state by replacing it with the input.
 update : String -> String -> String
 update action _ = action
 
+-------------
+-- Mailbox --
+-------------
 
 -- This is a mailbox of UndoList.Action
 {address, signal} = mailbox Reset
+
+----------
+-- Main --
+----------
 
 -- The main function.
 main : Signal Html
