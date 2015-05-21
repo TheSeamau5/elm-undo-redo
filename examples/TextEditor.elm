@@ -20,7 +20,7 @@ view address state =
                 , "font-size" => "14pt"
                 ]
             ]
-            [ Html.text (toActionString value) ]
+            [ Html.text (toString value) ]
 
       undoButton =
         button Undo
@@ -117,11 +117,3 @@ main =
 ----------------------
 
 (=>) = (,)
-
-toActionString action =
-  case action of
-    New a -> "New " ++ toString a
-    Undo -> "Undo"
-    Redo -> "Redo"
-    Forget -> "Forget"
-    Reset -> "Reset"
