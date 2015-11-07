@@ -15,7 +15,7 @@ type alias UndoList state =
   , present : state
   , future  : List state
   }
-``````
+```
 
 An `UndoList` contains a list of past states, a present state, and a list of future states. By keeping track of the past, present, and future states, undo and redo become just a matter of sliding the present around a bit.
 
