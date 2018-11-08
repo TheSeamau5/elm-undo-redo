@@ -1,3 +1,7 @@
+# [DEPRECATED] Project has moved to https://github.com/elm-community/undo-redo
+
+
+
 # Undo in any Elm app
 
 Add undo/redo to any Elm app with just a few lines of code!
